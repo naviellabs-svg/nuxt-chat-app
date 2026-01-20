@@ -50,4 +50,143 @@
 ## Project Setup: 3 - Create a GitHub Project
 
 ### Terminal
-  - [ ] make first commit 'git add .'
+
+- [ ] Stage all files
+
+  ```bash
+  git add .
+  ```
+
+- [ ] Check git status
+
+  ```bash
+  git status
+  ```
+
+- [ ] Make initial commit
+
+  ```bash
+  git commit -m "initial commit"
+  ```
+
+### GitHub
+
+- [ ] Create new repository on GitHub
+  - Go to [github.com/new](https://github.com/new)
+  - Name your repository (e.g., `my-nuxt-app`)
+  - Do not initialize with README, .gitignore, or license (project already has these)
+
+- [ ] Connect local repository to GitHub
+
+  ```bash
+  git remote add origin git@github.com:YOUR_USERNAME/YOUR_REPO_NAME.git
+  git branch -M main
+  git push -u origin main
+  ```
+
+  > Replace `YOUR_USERNAME` and `YOUR_REPO_NAME` with your actual GitHub username and repository name.
+
+## Project Setup: 4 - Keep your Node version consistent with NVM
+
+### Terminal
+
+- [ ] Install NVM (Node Version Manager)
+
+  Visit [NVM Installation Guide](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) and run the install command:
+
+  ```bash
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+  ```
+
+  > Installs NVM to manage multiple Node.js versions on your system.
+
+- [ ] Verify NVM installation
+
+  Close and reopen your terminal, then run:
+
+  ```bash
+  command -v nvm
+  ```
+
+  > Should output `nvm` if installation was successful. If not, restart your terminal or check the installation.
+
+- [ ] Install latest LTS Node.js version
+
+  ```bash
+  nvm install --lts
+  ```
+
+  > Installs the latest stable Long Term Support version of Node.js.
+
+- [ ] Create `.nvmrc` file for project
+
+  ```bash
+  node -v > .nvmrc
+  ```
+
+  > Creates a file that specifies which Node.js version this project should use.
+
+- [ ] Verify `.nvmrc` file
+
+  ```bash
+  cat .nvmrc
+  ```
+
+  > Displays the Node.js version that will be used for this project.
+
+- [ ] Create `.npmrc` file for pnpm compatibility
+
+  ```bash
+  echo "shamefully-hoist=true" > .npmrc
+  ```
+
+  > Creates `.npmrc` file with pnpm configuration to ensure proper dependency hoisting.
+
+## Project Setup: 5 - Setup the Ideal Nuxt Development Experience with VS Code Extensions
+
+### Terminal
+
+- [ ] Create `.vscode` directory
+
+  ```bash
+  mkdir -p .vscode
+  ```
+
+  > Creates the directory for VS Code workspace settings.
+
+- [ ] Create `extensions.json` file
+
+  ```bash
+  cat > .vscode/extensions.json << 'EOF'
+  {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "Vue.volar",
+      "prisma.prisma",
+      "bradlc.vscode-tailwindcss",
+      "dbaeumer.vscode-eslint"
+    ],
+    "unwantedRecommendations": [
+      "octref.vetur"
+    ]
+  }
+  EOF
+  ```
+
+  > Creates VS Code extensions recommendations file. VS Code will suggest these extensions when you open the project.
+
+- [ ] Create `settings.json` file
+
+  ```bash
+  cat > .vscode/settings.json << 'EOF'
+  {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[vue]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
+  }
+  EOF
+  ```
+
+  > Configures VS Code to format files on save using Prettier, with Vue-specific formatting support.
