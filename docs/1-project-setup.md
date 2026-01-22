@@ -298,8 +298,42 @@
 ## Project Setup: 7 - Enforce consistent code style with ESLint
 
 ### Terminal
-- [ ] pnpm dlx nuxi module add eslint
+
+- [ ] Add ESLint module
+
+  ```bash
+  pnpm dlx nuxi module add eslint
+  ```
+
+  > Installs and configures ESLint for your Nuxt project to enforce consistent code style.
 
 ### package.json
-- [ ] add ` "lint": "eslint .",
-    "lint:fix": "eslint --fix"`
+
+- [ ] Add lint scripts
+
+  Update your `package.json` scripts section to include:
+
+  ```json
+  {
+    "scripts": {
+      "build": "nuxt build",
+      "dev": "nuxt dev",
+      "generate": "nuxt generate",
+      "preview": "nuxt preview",
+      "postinstall": "nuxt prepare",
+      "lint": "eslint .",
+      "lint:fix": "eslint --fix ."
+    }
+  }
+  ```
+
+  > Adds lint commands to check and automatically fix code style issues.
+
+## Project setup - 8 - Run linting automatically with Husky
+
+### Terminal 
+- [ ] pnpm add --save-dev husky
+- [ ]initialise husky `pnpm exec husky init`
+
+### husky/pre-commit
+- [ ] chgange to `pnpm lint`
