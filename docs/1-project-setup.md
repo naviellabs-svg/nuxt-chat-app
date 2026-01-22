@@ -190,3 +190,64 @@
   ```
 
   > Configures VS Code to format files on save using Prettier, with Vue-specific formatting support.
+## Project setup: 6 - Quickly build beautiful UIs with Nuxt UI
+
+### Terminal
+
+- [ ] pnpm add @nuxt/ui@3.0.0
+
+### nuxt.config.ts
+
+- [ ] add 
+```
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  compatibilityDate: '2025-07-15',
+  devtools: { enabled: true },
+
+  modules: ['@nuxt/ui'],
+})
+```
+### app
+- [ ]  create assets/css/main.css
+- [ ] add
+```
+@import "tailwindcss" theme(static)
+@import "@nuxt/ui"
+```
+
+### nuxt.config.ts
+
+- [ ] add   css: ['~/assets/css/main.css'],
+
+### settings.json
+
+- [ ] add `},
+  "files.associations": {
+    "*css": "tailwindcss"
+  },
+  "editor.quickSuggestions": {
+    "strings": "on"
+  }
+}`
+
+### app.vue
+
+- [ ][ wrap app in u component
+`<template>
+  <div>
+    <NuxtRouteAnnouncer />
+    <UBuuton>Click me!</UButton>
+  </UApp>
+</div>`
+
+]
+
+- add bUButton
+
+`<template>
+  <UApp>
+    <NuxtRouteAnnouncer />
+    <UBuuton>Click me!</UButton>
+  </UApp>
+</template>`
