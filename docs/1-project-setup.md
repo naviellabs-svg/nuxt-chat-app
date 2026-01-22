@@ -329,11 +329,34 @@
 
   > Adds lint commands to check and automatically fix code style issues.
 
-## Project setup - 8 - Run linting automatically with Husky
+## Project Setup: 8 - Run linting automatically with Husky
 
-### Terminal 
-- [ ] pnpm add --save-dev husky
-- [ ]initialise husky `pnpm exec husky init`
+### Terminal
 
-### husky/pre-commit
-- [ ] chgange to `pnpm lint`
+- [ ] Install Husky
+
+  ```bash
+  pnpm add --save-dev husky
+  ```
+
+  > Installs Husky, a tool for managing Git hooks.
+
+- [ ] Initialize Husky
+
+  ```bash
+  pnpm exec husky init
+  ```
+
+  > Sets up Husky in your project and creates the `.husky` directory.
+
+### .husky/pre-commit
+
+- [ ] Update pre-commit hook
+
+  ```bash
+  cat > .husky/pre-commit << 'EOF'
+  pnpm lint
+  EOF
+  ```
+
+  > Configures the pre-commit hook to run linting automatically before each commit. This ensures code quality standards are maintained.
