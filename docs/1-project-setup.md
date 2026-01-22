@@ -190,64 +190,116 @@
   ```
 
   > Configures VS Code to format files on save using Prettier, with Vue-specific formatting support.
-## Project setup: 6 - Quickly build beautiful UIs with Nuxt UI
+
+## Project Setup: 6 - Quickly build beautiful UIs with Nuxt UI
 
 ### Terminal
 
-- [ ] pnpm add @nuxt/ui@3.0.0
+- [ ] Install Nuxt UI
+
+  ```bash
+  pnpm add @nuxt/ui@latest
+  ```
+
+  > Installs the latest version of Nuxt UI, which includes Tailwind CSS and beautiful components.
 
 ### nuxt.config.ts
 
-- [ ] add 
-```
-// https://nuxt.com/docs/api/configuration/nuxt-config
-export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
+- [ ] Add Nuxt UI module
 
-  modules: ['@nuxt/ui'],
-})
-```
-### app
-- [ ]  create assets/css/main.css
-- [ ] add
-```
-@import "tailwindcss" theme(static)
-@import "@nuxt/ui"
-```
+  ```typescript
+  // https://nuxt.com/docs/api/configuration/nuxt-config
+  export default defineNuxtConfig({
+    compatibilityDate: '2025-01-20',
+    devtools: { enabled: true },
+
+    modules: ['@nuxt/ui']
+  })
+  ```
+
+  > Adds the Nuxt UI module to your Nuxt configuration.
+
+### app/assets/css/main.css
+
+- [ ] Create CSS file
+
+  ```bash
+  mkdir -p app/assets/css
+  ```
+
+- [ ] Add Nuxt UI import
+
+  ```bash
+  cat > app/assets/css/main.css << 'EOF'
+  @import "@nuxt/ui";
+  EOF
+  ```
+
+  > Creates the main CSS file and imports Nuxt UI styles. Nuxt UI handles Tailwind CSS internally.
 
 ### nuxt.config.ts
 
-- [ ] add   css: ['~/assets/css/main.css'],
+- [ ] Add CSS configuration
 
-### settings.json
+  ```typescript
+  export default defineNuxtConfig({
+    compatibilityDate: '2025-01-20',
+    devtools: { enabled: true },
 
-- [ ] add `},
-  "files.associations": {
-    "*css": "tailwindcss"
-  },
-  "editor.quickSuggestions": {
-    "strings": "on"
+    css: ['~/assets/css/main.css'],
+
+    modules: ['@nuxt/ui']
+  })
+  ```
+
+  > Tells Nuxt to load the main CSS file.
+
+### .vscode/settings.json
+
+- [ ] Update settings for Tailwind CSS support
+
+  Update `.vscode/settings.json` to include:
+
+  ```json
+  {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[vue]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "files.associations": {
+      "*.css": "tailwindcss"
+    },
+    "editor.quickSuggestions": {
+      "strings": "on"
+    }
   }
-}`
+  ```
 
-### app.vue
+  > Adds Tailwind CSS IntelliSense support in VS Code. Merge these settings with your existing settings.json file.
 
-- [ ][ wrap app in u component
-`<template>
-  <div>
-    <NuxtRouteAnnouncer />
-    <UBuuton>Click me!</UButton>
-  </UApp>
-</div>`
+### app/app.vue
 
-]
+- [ ] Wrap app in UApp component
 
-- add bUButton
+  ```bash
+  cat > app/app.vue << 'EOF'
+  <template>
+    <UApp>
+      <NuxtRouteAnnouncer />
+      <UButton>Click me!</UButton>
+    </UApp>
+  </template>
+  EOF
+  ```
 
-`<template>
-  <UApp>
-    <NuxtRouteAnnouncer />
-    <UBuuton>Click me!</UButton>
-  </UApp>
-</template>`
+  > Wraps your app with UApp component and adds a sample UButton to test Nuxt UI.
+
+## Project Setup: 7 - Enforce consistent code style with ESLint
+
+### Terminal
+- [ ] pnpm dlx nuxi module add eslint
+
+### package.json
+- [ ] add ` "lint": "eslint .",
+    "lint:fix": "eslint --fix"`
