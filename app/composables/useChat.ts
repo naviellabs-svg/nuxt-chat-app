@@ -7,6 +7,7 @@ export default function useChat() {
     () => chat.value.messages
   )
 
+
   function createMessage(
     message: string,
     role: ChatMessage['role']

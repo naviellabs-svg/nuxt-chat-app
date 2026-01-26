@@ -186,115 +186,216 @@
 
 ## Step 3 - Use Composables to Organize Logic
 
-### app
-- [ ] add new file types.ts
+### app/types.ts
 
-### types.ts
-- ```
-[ ] export interface ChatMessage {
+- [ ] Create types file
+
+  ```bash
+  cat > app/types.ts << 'EOF'
+  export interface ChatMessage {
     id: string
     role: 'user' | 'assistant'
     content: string
-}
+  }
 
-export interface Chat {
+  export interface Chat {
     id: string
     title: string
     messages: ChatMessage[]
-}
-```
+  }
+  EOF
+  ```
 
-### app
-- [ ] create folder composable
- -[ ] create file useChat.ts
+  > Defines TypeScript interfaces for chat functionality:
+  > - `ChatMessage`: Represents a single message with id, role (user or assistant), and content
+  > - `Chat`: Represents a chat conversation with id, title, and array of messages
 
- ### useChat.ts
+### app/composables
 
- - [ ]add import type { Chat, ChatMessage } from '../types'
- - [ ]add new file in composables mockData.ts
- - [ ] get user data from repo templaes
- ```
- import type { Chat, ChatMessage } from '../types'
+- [ ] Create composables directory
 
-// Mock data for initial messages
-const MOCK_MESSAGES: ChatMessage[] = [
-  {
+  ```bash
+  mkdir -p app/composables
+  ```
+
+  > Creates the composables directory. Composables are reusable functions that use Vue's Composition API.
+
+- [ ] Create mockData.ts file
+
+  ```bash
+  cat > app/composables/mockData.ts << 'EOF'
+  import type { Chat, ChatMessage } from '../types'
+
+  // Mock data for initial messages
+  const MOCK_MESSAGES: ChatMessage[] = [
+    {
+      id: '1',
+      role: 'user',
+      content: 'Hello, can you help me with my Nuxt.js project?',
+    },
+    {
+      id: '2',
+      role: 'assistant',
+      content:
+        "Of course! I'd be happy to help with your Nuxt.js project. What specific questions or issues do you have?",
+    },
+    {
+      id: '3',
+      role: 'user',
+      content: 'How do I implement server-side rendering?',
+    },
+    {
+      id: '4',
+      role: 'assistant',
+      content:
+        "Nuxt.js provides server-side rendering out of the box! You don't need to do any special configuration for basic SSR. If you need specific optimizations, we can discuss those in detail.",
+    },
+  ]
+
+  // Mock data for initial chat
+  const MOCK_CHAT: Chat = {
     id: '1',
-    role: 'user',
-    content:
-      'Hello, can you help me with my Nuxt.js project?',
-  },
-  {
-    id: '2',
-    role: 'assistant',
-    content:
-      "Of course! I'd be happy to help with your Nuxt.js project. What specific questions or issues do you have?",
-  },
-  {
-    id: '3',
-    role: 'user',
-    content: 'How do I implement server-side rendering?',
-  },
-  {
-    id: '4',
-    role: 'assistant',
-    content:
-      "Nuxt.js provides server-side rendering out of the box! You don't need to do any special configuration for basic SSR. If you need specific optimizations, we can discuss those in detail.",
-  },
-]
+    title: 'Nuxt.js project help',
+    messages: [...MOCK_MESSAGES],
+  }
 
-// Mock data for initial chat
-const MOCK_CHAT: Chat = {
-  id: '1',
-  title: 'Nuxt.js project help',
-  messages: [...MOCK_MESSAGES],
-}
+  export { MOCK_CHAT, MOCK_MESSAGES }
+  EOF
+  ```
 
-export { MOCK_CHAT, MOCK_MESSAGES }
-```
+  > Creates mock data for testing:
+  > - `MOCK_MESSAGES`: Array of sample chat messages
+  > - `MOCK_CHAT`: Sample chat object with messages
+  > - Exports both for use in the composable
 
-- [ ] now import it into useChat.ts
+- [ ] Create useChat.ts composable
 
-### useChat.ts
-- [ ] craete first compoasbels and functions
-'''
-import type { Chat, ChatMessage } from '../types'
-import { MOCK_CHAT } from './mockData'
+  ```bash
+  cat > app/composables/useChat.ts << 'EOF'
+  import type { Chat, ChatMessage } from '../types'
+  import { MOCK_CHAT } from './mockData'
 
-export default function useChat() {
+  export default function useChat() {
+    // Reactive state: holds the current chat data
     const chat = ref<Chat>(MOCK_CHAT)
-    const messages = computed<ChatMessage[]>(
-        () => chat.value.messages
-)
 
-function createMessage(
-    message: string,
-    role: ChatMessage['role']
-) {
-    const id = messages.value.length.toString()
+    // Computed property: automatically updates when chat.messages changes
+    // This provides a reactive reference to the messages array
+    const messages = computed<ChatMessage[]>(() => chat.value.messages)
 
-    return {
+    // Helper function: creates a new message object
+    // Takes the message content and role (user or assistant)
+    function createMessage(message: string, role: ChatMessage['role']) {
+      const id = messages.value.length.toString()
+
+      return {
         id,
         role,
-        conetnt: message,
+        content: message,
+      }
     }
-}
 
-function sendMessage(message: string) {
-    messages.value.push(createMessage(message, 'user'))
+    // Main function: sends a user message and simulates an assistant response
+    // 1. Adds the user message to the messages array
+    // 2. After 200ms, adds a mock assistant response
+    function sendMessage(message: string) {
+      messages.value.push(createMessage(message, 'user'))
 
-    setTimeout(() => {
+      setTimeout(() => {
         messages.value.push(
-            createMessage(`You said: ${message}`, 'assistant')
+          createMessage(`You said: ${message}`, 'assistant')
         )
-    }, 200)
-}
+      }, 200)
+    }
 
+    // Return all the reactive state and functions for use in components
+    return {
+      chat,        // The full chat object (reactive)
+      messages,    // Computed array of messages (reactive)
+      sendMessage, // Function to send new messages
+    }
+  }
+  EOF
+  ```
 
-return {
-    chat,
-    messages,
-    sendMessage,
-}
-}
-```
+  > Creates the `useChat` composable that manages chat state and logic:
+  > 
+  > **State Management:**
+  > - `chat`: Reactive ref holding the current chat data (initialized with mock data)
+  > - `messages`: Computed property that automatically returns chat.messages when chat changes
+  > 
+  > **Functions:**
+  > - `createMessage()`: Helper that creates a new message object with auto-generated ID
+  > - `sendMessage()`: Adds user message immediately, then simulates assistant response after 200ms
+  > 
+  > **Return Value:**
+  > - Returns reactive state and functions that components can use
+  > - This pattern keeps logic separate from UI components
+
+  ## Step 4 - Use Components to Organize UI
+
+  ### app
+  - [ ] creat new folder components
+
+  ### components
+  - [ ]  copy ChatInput from repo
+  - [ ] copy ChatWindow form repo
+  
+  ### chat.vue
+
+  - [ ] use <Chatwindow />
+
+  ### ChatWindow.vue
+
+  - [ ] update code like this
+  ```
+  <script setup lang="ts">
+  const { chat, messages, sendMessage } = useChat()
+
+  function handleSendMessage(message : string) {
+    sendMessage(message)
+  }
+  
+</script>
+
+<template>
+    <div ref="scrollContainer" class="scroll-container">
+      <UContainer class="chat-container">
+        <div v-if="!messages?.length" class="empty-state">
+          <div class="empty-state-card">
+          <h2 class="empty-state-title">Start a new chat</h2>
+          <ChatInput @send-message="handleSendMessage" />
+        </div>
+      </div>
+
+      <template v-else>
+        <div class="chat-header">
+          <h1 class="title">
+            {{  chat?.title || 'untitled Chat'  }}
+            </h1>
+        </div>
+        <div class="messages-container">
+          <div
+            v-for="message in messages"
+            :key="message.id"
+            class="message"
+            :class="{
+              'message-user': message.role === 'user',
+              'message-ai': message.role === 'assistant'
+            }"
+            >
+            <div class="message-content">
+              {{  message.content  }}
+            </div>
+          </div>
+        </div>
+        <div class="message-form-container">
+          <ChatInput @send-message="handleSendMessage" />
+        </div>
+        </template>
+      </UContainer>
+    </div>
+  </template>
+  ```
+
+  
