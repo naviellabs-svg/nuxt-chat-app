@@ -332,70 +332,337 @@
   > - Returns reactive state and functions that components can use
   > - This pattern keeps logic separate from UI components
 
-  ## Step 4 - Use Components to Organize UI
+## Step 4 - Use Components to Organize UI
 
-  ### app
-  - [ ] creat new folder components
+### app/components
 
-  ### components
-  - [ ]  copy ChatInput from repo
-  - [ ] copy ChatWindow form repo
-  
-  ### chat.vue
+- [ ] Create components directory
 
-  - [ ] use <Chatwindow />
-
-  ### ChatWindow.vue
-
-  - [ ] update code like this
+  ```bash
+  mkdir -p app/components
   ```
+
+  > Creates the components directory. Components are reusable UI pieces that can be used across pages.
+
+- [ ] Create ChatInput.vue component
+
+  > Copy the `ChatInput.vue` component from the course repository templates. This component handles message input and emits a `send-message` event.
+
+- [ ] Create ChatWindow.vue component
+
+  > Copy the `ChatWindow.vue` component from the course repository templates. This will be the main chat interface component.
+
+### app/components/ChatWindow.vue
+
+- [ ] Update ChatWindow.vue to use the composable
+
+  ```bash
+  cat > app/components/ChatWindow.vue << 'EOF'
   <script setup lang="ts">
+  // Use the useChat composable to get chat state and functions
   const { chat, messages, sendMessage } = useChat()
 
-  function handleSendMessage(message : string) {
+  // Handler function that receives the message from ChatInput component
+  // and passes it to the sendMessage function from the composable
+  function handleSendMessage(message: string) {
     sendMessage(message)
   }
-  
-</script>
+  </script>
 
-<template>
+  <template>
     <div ref="scrollContainer" class="scroll-container">
       <UContainer class="chat-container">
+        <!-- Empty state: shown when there are no messages -->
         <div v-if="!messages?.length" class="empty-state">
           <div class="empty-state-card">
-          <h2 class="empty-state-title">Start a new chat</h2>
-          <ChatInput @send-message="handleSendMessage" />
-        </div>
-      </div>
-
-      <template v-else>
-        <div class="chat-header">
-          <h1 class="title">
-            {{  chat?.title || 'untitled Chat'  }}
-            </h1>
-        </div>
-        <div class="messages-container">
-          <div
-            v-for="message in messages"
-            :key="message.id"
-            class="message"
-            :class="{
-              'message-user': message.role === 'user',
-              'message-ai': message.role === 'assistant'
-            }"
-            >
-            <div class="message-content">
-              {{  message.content  }}
-            </div>
+            <h2 class="empty-state-title">Start a new chat</h2>
+            <ChatInput @send-message="handleSendMessage" />
           </div>
         </div>
-        <div class="message-form-container">
-          <ChatInput @send-message="handleSendMessage" />
-        </div>
+
+        <!-- Chat interface: shown when messages exist -->
+        <template v-else>
+          <!-- Chat header with title -->
+          <div class="chat-header">
+            <h1 class="title">
+              {{ chat?.title || 'Untitled Chat' }}
+            </h1>
+          </div>
+
+          <!-- Messages list: loops through all messages -->
+          <div class="messages-container">
+            <div
+              v-for="message in messages"
+              :key="message.id"
+              class="message"
+              :class="{
+                'message-user': message.role === 'user',
+                'message-ai': message.role === 'assistant'
+              }"
+            >
+              <div class="message-content">
+                {{ message.content }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Message input form at the bottom -->
+          <div class="message-form-container">
+            <ChatInput @send-message="handleSendMessage" />
+          </div>
         </template>
       </UContainer>
     </div>
   </template>
+  EOF
   ```
 
+  > Updates ChatWindow component to:
+  > - **Import composable**: Uses `useChat()` to get reactive chat state and functions
+  > - **Handle messages**: `handleSendMessage()` receives messages from ChatInput and passes to composable
+  > - **Empty state**: Shows when no messages exist, displays ChatInput to start conversation
+  > - **Chat interface**: Shows chat title, loops through messages with conditional styling based on role
+  > - **Message input**: Always shows ChatInput at bottom when messages exist
+
+### app/pages/chat.vue
+
+- [ ] Update chat.vue to use ChatWindow component
+
+  ```bash
+  cat > app/pages/chat.vue << 'EOF'
+  <template>
+    <ChatWindow />
+  </template>
+
+  <script setup lang="ts">
+  definePageMeta({
+    layout: 'default'
+  })
+  </script>
+  EOF
+  ```
+
+  > Updates the chat page to:
+  > - Use the `<ChatWindow />` component (Nuxt auto-imports components from the `components` folder)
+  > - Sets layout back to `default` (removes the blue test layout)
+  > - The page is now just a wrapper that renders the ChatWindow component
+
+## Step 5 - Add a Button to Scroll to the Bottom of the Chat
+
+### app/composables/useChatScroll.ts
+
+- [ ] Create useChatScroll composable
+
+  ```bash
+  cat > app/composables/useChatScroll.ts << 'EOF'
+  export default function useChatScroll() {
+    // Template refs: references to DOM elements
+    const scrollContainer = useTemplateRef<HTMLDivElement>('scrollContainer')
+    const textareaRef = useTemplateRef<HTMLTextAreaElement>('textareaRef')
+    
+    // Reactive state: tracks scroll position and button visibility
+    const isAtBottom = ref(true)
+    const showScrollButton = ref(false)
+
+    // Check if chat is scrolled to bottom (within 200px threshold)
+    // Updates isAtBottom and showScrollButton based on scroll position
+    const checkScrollPosition = (): void => {
+      if (scrollContainer.value) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainer.value
+        isAtBottom.value = scrollTop + clientHeight >= scrollHeight - 200
+        showScrollButton.value = !isAtBottom.value
+      }
+    }
+
+    // Smooth scroll to bottom with easing animation
+    // If immediate=true, scrolls instantly without animation
+    const scrollToBottom = (immediate = false): void => {
+      if (!scrollContainer.value) return
+
+      const targetScrollTop =
+        scrollContainer.value.scrollHeight - scrollContainer.value.clientHeight
+
+      if (immediate) {
+        scrollContainer.value.scrollTop = targetScrollTop
+        return
+      }
+
+      // Animated scroll with cubic easing
+      const startScrollTop = scrollContainer.value.scrollTop
+      const distance = targetScrollTop - startScrollTop
+      const duration = 300
+
+      const startTime = performance.now()
+      function step(currentTime: number): void {
+        const elapsed = currentTime - startTime
+        const progress = Math.min(elapsed / duration, 1)
+        const easeInOutCubic =
+          progress < 0.5
+            ? 4 * progress * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 3) / 2
+
+        if (scrollContainer.value) {
+          scrollContainer.value.scrollTop =
+            startScrollTop + distance * easeInOutCubic
+
+          if (progress < 1) {
+            requestAnimationFrame(step)
+          }
+        }
+      }
+
+      requestAnimationFrame(step)
+    }
+
+    // Auto-scroll to bottom when new messages arrive (if already at bottom)
+    // Prevents interrupting user if they're reading older messages
+    async function pinToBottom() {
+      if (isAtBottom.value) {
+        if (scrollContainer.value) {
+          await nextTick()
+          scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight
+        }
+      }
+    }
+
+    // Setup: add scroll listener and scroll to bottom on mount
+    onMounted(() => {
+      if (scrollContainer.value) {
+        scrollContainer.value.addEventListener('scroll', checkScrollPosition)
+        nextTick(() => {
+          scrollToBottom(true) // Immediate scroll on mount
+          textareaRef.value?.focus()
+        })
+      }
+    })
+
+    // Cleanup: remove scroll listener on unmount
+    onUnmounted(() => {
+      if (scrollContainer.value) {
+        scrollContainer.value.removeEventListener('scroll', checkScrollPosition)
+      }
+    })
+
+    // Check scroll position whenever component updates
+    onUpdated(() => {
+      checkScrollPosition()
+    })
+
+    return {
+      isAtBottom,        // Whether user is at bottom (reactive)
+      showScrollButton,  // Whether to show scroll button (reactive)
+      scrollToBottom,   // Function to scroll to bottom
+      textareaRef,       // Reference to textarea element
+      pinToBottom,      // Function to auto-scroll on new messages
+    }
+  }
+  EOF
+  ```
+
+  > Creates the `useChatScroll` composable that manages scroll behavior:
+  > 
+  > **Template Refs:**
+  > - `scrollContainer`: Reference to the scrollable chat container
+  > - `textareaRef`: Reference to the message input textarea
+  > 
+  > **State:**
+  > - `isAtBottom`: Tracks if user is scrolled to bottom (within 200px)
+  > - `showScrollButton`: Controls visibility of scroll-to-bottom button
+  > 
+  > **Functions:**
+  > - `checkScrollPosition()`: Checks current scroll position and updates state
+  > - `scrollToBottom()`: Smoothly scrolls to bottom with easing animation
+  > - `pinToBottom()`: Auto-scrolls when new messages arrive (if user was at bottom)
+  > 
+  > **Lifecycle:**
+  > - `onMounted`: Sets up scroll listener and scrolls to bottom initially
+  > - `onUnmounted`: Cleans up scroll listener
+  > - `onUpdated`: Checks scroll position after each update
+
+### app/components/ChatWindow.vue
+
+- [ ] Update ChatWindow.vue to use scroll composable
+
+  ```bash
+  cat > app/components/ChatWindow.vue << 'EOF'
+  <script setup lang="ts">
+  // Use the useChat composable to get chat state and functions
+  const { chat, messages, sendMessage } = useChat()
   
+  // Use the useChatScroll composable to get scroll functionality
+  const { showScrollButton, scrollToBottom, pinToBottom } = useChatScroll()
+
+  // Handler function that receives the message from ChatInput component
+  function handleSendMessage(message: string) {
+    sendMessage(message)
+  }
+
+  // Watch for new messages and auto-scroll if user is at bottom
+  watch(() => messages.value, pinToBottom, { deep: true })
+  </script>
+
+  <template>
+    <div ref="scrollContainer" class="scroll-container">
+      <UContainer class="chat-container">
+        <!-- Empty state: shown when there are no messages -->
+        <div v-if="!messages?.length" class="empty-state">
+          <div class="empty-state-card">
+            <h2 class="empty-state-title">Start a new chat</h2>
+            <ChatInput @send-message="handleSendMessage" />
+          </div>
+        </div>
+
+        <!-- Chat interface: shown when messages exist -->
+        <template v-else>
+          <!-- Chat header with title -->
+          <div class="chat-header">
+            <h1 class="title">
+              {{ chat?.title || 'Untitled Chat' }}
+            </h1>
+          </div>
+
+          <!-- Messages list: loops through all messages -->
+          <div class="messages-container">
+            <div
+              v-for="message in messages"
+              :key="message.id"
+              class="message"
+              :class="{
+                'message-user': message.role === 'user',
+                'message-ai': message.role === 'assistant'
+              }"
+            >
+              <div class="message-content">
+                {{ message.content }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Message input form at the bottom -->
+          <div class="message-form-container">
+            <ChatInput @send-message="handleSendMessage" />
+          </div>
+        </template>
+      </UContainer>
+
+      <!-- Scroll to bottom button: appears when user scrolls up -->
+      <div class="scroll-to-bottom-button-container">
+        <UButton
+          v-if="showScrollButton"
+          color="neutral"
+          variant="outline"
+          icon="i-heroicons-arrow-down"
+          class="rounded-full shadow-sm"
+          @click="scrollToBottom"
+        />
+      </div>
+    </div>
+  </template>
+  EOF
+  ```
+
+  > Updates ChatWindow component to:
+  > - **Import scroll composable**: Uses `useChatScroll()` to get scroll functionality
+  > - **Watch messages**: Automatically scrolls to bottom when new messages arrive (if user was at bottom)
+  > - **Scroll button**: Shows a button when user scrolls up, clicking it scrolls back to bottom
+  > - **Template ref**: The `ref="scrollContainer"` connects to the composable's template ref
