@@ -666,3 +666,167 @@
   > - **Watch messages**: Automatically scrolls to bottom when new messages arrive (if user was at bottom)
   > - **Scroll button**: Shows a button when user scrolls up, clicking it scrolls back to bottom
   > - **Template ref**: The `ref="scrollContainer"` connects to the composable's template ref
+
+## Step 6 - Decide Between Pages, Layouts, and Components
+
+Refactor the chat UI so that pages own state and composables, and components stay presentational (props in, events out).
+
+### Guidelines
+
+**Pages**
+
+- [ ] Nuxt-specific pages (file-based routes)
+- [ ] Nuxt-specific composables (e.g. `useChat`)
+- [ ] Logic that accesses or manages different state
+
+**Layouts**
+
+- [ ] Parts of the UI shared across multiple different pages
+- [ ] Set via `definePageMeta({ layout: '...' })`
+
+**Components**
+
+- [ ] Keep components simple and presentational
+- [ ] Take in props and emit events; avoid owning global or route-specific state
+
+### app/components/ChatWindow.vue
+
+- [ ] Update ChatWindow to follow guidelines (props in, events out)
+
+  ```vue
+  <script setup lang="ts">
+  import type { ChatMessage, Chat } from '../types'
+
+  const props = defineProps<{
+    messages: ChatMessage[]
+    chat: Chat
+  }>()
+
+  const emit = defineEmits<{ 'send-message': [message: string] }>()
+
+  const { showScrollButton, scrollToBottom, pinToBottom } = useChatScroll()
+
+  function handleSendMessage(message: string) {
+    emit('send-message', message)
+  }
+
+  watch(() => props.messages, pinToBottom, { deep: true })
+  </script>
+  ```
+
+  > ChatWindow receives `chat` and `messages` as props and emits `send-message` instead of using `useChat()` directly.
+
+### app/pages/chat.vue
+
+- [ ] Update chat page to own composables and pass data into ChatWindow
+
+  ```vue
+  <script setup lang="ts">
+  const { chat, messages, sendMessage } = useChat()
+  </script>
+
+  <template>
+    <ChatWindow :chat="chat" :messages="messages" @send-message="sendMessage" />
+  </template>
+  ```
+
+  > The page uses `useChat()` and passes `chat`, `messages`, and `sendMessage` into ChatWindow so the component stays presentational.
+
+## Step 7 - Reactively Update the Head Tag with useHead
+
+### app/pages/chat.vue
+
+- [ ] Set the document title from the current chat
+
+  ```ts
+  useHead({
+    title: () => chat.value?.title ?? 'Chat',
+  })
+  ```
+
+  > Updates the browser tab title reactively when `chat.title` changes. Use a getter so the title stays in sync.
+
+## Step 8 - Create a Basic API with Server Routes
+
+### server/api
+
+- [ ] Create API directory
+
+  ```bash
+  mkdir -p server/api
+  ```
+
+  > Creates the server API directory. Nuxt automatically creates API routes from files in `server/api/`.
+
+- [ ] Create ai.ts API route
+
+  ```bash
+  cat > server/api/ai.ts << 'EOF'
+  export default defineEventHandler(() => ({
+    role: 'assistant',
+    content: '(server) hello!',
+  }))
+  EOF
+  ```
+
+  > Creates a basic API endpoint at `/api/ai` that returns a simple response. The `defineEventHandler` function is Nuxt's way of creating server routes.
+
+### server/api/ai.ts
+
+- [ ] Update ai.ts to handle POST requests with messages
+
+  ```bash
+  cat > server/api/ai.ts << 'EOF'
+  export default defineEventHandler(async (event) => {
+    const body = await readBody(event)
+    const { messages } = body
+
+    const lastMessage = messages[messages.length - 1]
+
+    return {
+      role: 'assistant',
+      content: `(server) You said: ${lastMessage.content}`,
+    }
+  })
+  EOF
+  ```
+
+  > Updates the API route to:
+  > - Accept POST requests with a body containing `messages`
+  > - Extract the last message from the messages array
+  > - Return a response that echoes back the user's message
+  > - Uses template literals for string interpolation
+
+## Step 9 - Fetch Data From Your API with $fetch
+
+In this lesson, you'll learn how to do basic data fetching with `$fetch` from ofetch. You'll fetch the mocked AI response from the server route you created in the previous lesson.
+
+In future lessons we'll see how we can use `useFetch` and `useAsyncData` to give us some extra benefits that `$fetch` doesn't do for us.
+
+**References:**
+- [$fetch - Nuxt Docs](https://nuxt.com/docs/api/utils/dollarfetch)
+- [ofetch ($fetch) - GitHub](https://github.com/unjs/ofetch)
+
+### app/composables/useChat.ts
+
+- [ ] Update sendMessage to call the API with $fetch and use the response
+
+  ```ts
+  async function sendMessage(message: string) {
+    messages.value.push(createMessage(message, "user"));
+
+    const data = await $fetch<ChatMessage>("/api/ai", {
+      method: "POST",
+      body: {
+        messages: messages.value,
+      },
+    });
+    messages.value.push(data);
+  }
+  ```
+
+  > - `sendMessage` becomes `async` so you can `await` the fetch.
+  > - `$fetch` is Nuxt's global (auto-imported) for HTTP requests; it uses [ofetch](https://github.com/unjs/ofetch).
+  > - Call `/api/ai` with `method: "POST"` and `body: { messages: messages.value }` to match the server route.
+  > - Type the response with `$fetch<ChatMessage>(...)` so the assistant message matches your `ChatMessage` shape.
+  > - Push the returned `data` into `messages.value` to replace the previous mock assistant response.

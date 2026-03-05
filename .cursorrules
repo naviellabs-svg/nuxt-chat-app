@@ -1,0 +1,59 @@
+# Nuxt Masterclass - Cursor Rules
+
+## Documentation Format
+
+When creating or editing lesson documentation files in `docs/`:
+
+- Use clear step headings with `## Step N - Title`
+- Use `###` subsections for file paths (e.g., `### app/pages/chat.vue`) or logical sections
+- Use checkboxes with `- [ ]` for actionable tasks
+- Include code blocks with proper language tags (`bash`, `vue`, `ts`, `json`, etc.)
+- Add explanatory text using `>` blockquotes after code blocks
+- Maintain consistent formatting and structure across all steps
+
+## Code Style
+
+- Use TypeScript for type safety
+- Prefer Composition API (`<script setup>`) over Options API
+- Use Nuxt auto-imports (don't manually import `ref`, `computed`, etc.)
+- Follow Vue 3 and Nuxt 3+ conventions
+- Use proper TypeScript types and interfaces
+
+## Architecture Guidelines
+
+**Pages** (`app/pages/`)
+- Own Nuxt-specific composables (e.g., `useChat`)
+- Manage route-specific state and logic
+- Pass data down to components via props
+
+**Layouts** (`app/layouts/`)
+- Shared UI structure across multiple pages
+- Set via `definePageMeta({ layout: '...' })`
+
+**Components** (`app/components/`)
+- Keep components simple and presentational
+- Props in, events out
+- Avoid owning global or route-specific state
+- Use composables only for UI-specific logic (e.g., `useChatScroll`)
+
+**Composables** (`app/composables/`)
+- Reusable logic and state management
+- Return reactive state and functions
+- Keep composables focused and single-purpose
+
+## File Structure
+
+Follow Nuxt 3+ conventions:
+- `app/` - Application code
+- `server/` - Server-side code (API routes, middleware)
+- `docs/` - Lesson documentation
+- Use TypeScript files (`.ts`, `.vue`) with proper typing
+
+## Best Practices
+
+- Write clear, explanatory comments in code
+- Use descriptive variable and function names
+- Keep functions small and focused
+- Prefer composition over inheritance
+- Use Nuxt UI components when available
+- Follow the lesson step format for consistency
